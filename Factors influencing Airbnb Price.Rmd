@@ -1,0 +1,135 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Topic
+
+Factors Affecting Airbnb Listing Prices
+data source: https://insideairbnb.com
+Inside Airbnb is a mission driven project that provides data about Airbnb's impact on residential communities
+
+## Objectives
+
+-   Cleaning and understanding Airbnb listing data\
+-   Identify which factors most strongly influence price
+
+## Skills Practiced
+
+-   Dimension Reduction 
+-   Statistical Modelling
+-   Statistical Reasoning and Interpretation
+
+## Research Question
+
+Which listing characteristics have the greatest impact on Airbnb prices?
+
+```{r load-data}
+library(readr)
+
+Listings <- read_csv("C:/Users/pries/OneDrive/Documents/listings.csv",
+                 show_col_types = FALSE)
+
+glimpse(Listings)
+dim(Listings)
+head(Listings, 15)
+
+```
+
+```{r}
+library(tidyverse)
+library(readr)
+
+df <- Listings
+
+sub <- df |>
+  transmute(
+    price = parse_number(price),
+
+    host_response_rate = parse_number(host_response_rate) / 100,
+    host_acceptance_rate = parse_number(host_acceptance_rate) / 100,
+    host_listings_count = as.numeric(host_listings_count),
+
+    property_type = as.factor(property_type),
+    room_type = as.factor(room_type),
+
+    accommodates = as.numeric(accommodates),
+    bathrooms = as.numeric(bathrooms),
+    bedrooms = as.numeric(bedrooms),
+    beds = as.numeric(beds),
+
+    minimum_nights = as.numeric(minimum_nights),
+    maximum_nights = as.numeric(maximum_nights)
+  ) |>
+  filter(!is.na(price), price > 0)
+
+glimpse(sub)
+head(sub)
+```
+
+
+```{r simple-regression-data}
+library(dplyr)
+library(readr)
+
+simple_df <- sub |>
+  dplyr::select(
+    price,
+    accommodates,
+    bedrooms,
+    room_type,
+    minimum_nights
+  ) |>
+  dplyr::filter(
+    !is.na(price),
+    !is.na(accommodates),
+    !is.na(bedrooms),
+    !is.na(room_type),
+    !is.na(minimum_nights)
+  ) |>
+  dplyr::mutate(
+    log_price = log1p(price),
+    room_type = as.factor(room_type)
+  )
+
+glimpse(simple_df)
+head(simple_df)
+```
+
+
+```{r}
+initial_n <- nrow(Listings)
+```
+
+
+```{r}
+after_basic_clean_n <- nrow(sub)
+
+removed_basic <- initial_n - after_basic_clean_n
+removed_basic
+```
+## Data Cleaning Strategy
+
+The following issues were systematically checked:
+
+1. Missing values
+2. Invalid or zero prices
+3. Extreme outliers
+4. Incorrect data types
+5. Duplicated entries
+6. Logical inconsistencies (e.g., 0 bedrooms but accommodates 10)
+
+
+## Fitting the linear regression
+
+
+```{r simple-linear-model}
+lm_simple <- lm(
+  log_price ~ accommodates + bedrooms + room_type + minimum_nights,
+  data = simple_df
+)
+
+summary(lm_simple)
+```
+
+
+
