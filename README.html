@@ -354,26 +354,42 @@ display: none;
 
 <div id="factors-on-airbnb-pricing-montreal-listings" class="section level1">
 <h1>Factors on Airbnb Pricing (Montreal Listings)</h1>
-<p>This project studies which factors are associated with Airbnb nightly
-prices in Montreal. The analysis combines:</p>
+<p>This project analyzes what drives Airbnb nightly prices in Montreal
+using a combination of:</p>
 <ul>
-<li><strong>structured listing features</strong> such as room type,
-accommodates, bedrooms, beds, and minimum nights</li>
-<li><strong>text analysis</strong> of listing descriptions using
-tokenization, stopword removal, TF-IDF, and exploratory wordclouds</li>
-<li><strong>statistical modeling</strong> using linear regression on
-<code>log1p(price)</code>, AIC-based model comparison, and interaction
-testing</li>
+<li><strong>structured listing features</strong> (room type,
+accommodates, bedrooms, beds, minimum nights)</li>
+<li><strong>text features</strong> from listing descriptions
+(tokenization, TF–IDF, word frequency analysis, PCA)</li>
+<li><strong>statistical modeling</strong> (linear regression, AIC-based
+model selection, interaction effects)</li>
 </ul>
-<p>The analysis is written in <strong>R Markdown</strong> and rendered
-in a GitHub-friendly format.</p>
+<p>The analysis is implemented in <strong>R Markdown</strong> and
+rendered for GitHub viewing.</p>
 <hr />
+<div id="analytical-research-question" class="section level2">
+<h2>🎯 Analytical Research Question</h2>
+<p>This project is guided by the following core research question:</p>
+<blockquote>
+<p><strong>How do listing characteristics such as capacity, room type,
+and minimum night requirements influence Airbnb pricing, and does the
+effect of bedrooms vary across different room types?</strong></p>
+</blockquote>
+<p>To support this, the analysis also explores:</p>
+<ul>
+<li>Do listing descriptions differ systematically between high-priced
+and low-priced listings?</li>
+<li>Can text-based features (TF–IDF, PCA) reveal latent patterns
+associated with price?</li>
+</ul>
+<hr />
+</div>
 <div id="project-goal" class="section level2">
 <h2>Project Goal</h2>
-<p>The main goal is to understand which listing characteristics are most
-strongly related to Airbnb prices in Montreal, while also exploring
-whether listing descriptions contain language patterns associated with
-higher- and lower-priced properties.</p>
+<p>The goal is to <strong>quantify how both structured listing
+attributes and textual description features relate to Airbnb
+pricing</strong>, using interpretable statistical models and text-based
+feature engineering.</p>
 <hr />
 </div>
 <div id="what-the-project-does" class="section level2">
@@ -381,118 +397,136 @@ higher- and lower-priced properties.</p>
 <div id="data-loading" class="section level3">
 <h3>1. Data Loading</h3>
 <ul>
-<li>Imports <code>listings.csv</code> from an Inside Airbnb-style
-Montreal dataset.</li>
+<li>Imports <code>listings.csv</code> (Inside Airbnb dataset for
+Montreal)</li>
 </ul>
+<hr />
 </div>
 <div id="data-cleaning-and-preparation" class="section level3">
 <h3>2. Data Cleaning and Preparation</h3>
 <ul>
 <li>Converts variables to appropriate types:
 <ul>
-<li><code>price</code> from text to numeric</li>
-<li>response/acceptance rates from percentages to proportions</li>
-<li>numeric housing variables such as <code>accommodates</code>,
-<code>bathrooms</code>, <code>bedrooms</code>, and
-<code>beds</code></li>
-<li>categorical variables such as <code>property_type</code> and
-<code>room_type</code> to factors</li>
+<li><code>price</code> → numeric</li>
+<li>percentage variables → proportions</li>
+<li>numeric housing variables → numeric</li>
+<li>categorical variables → factors</li>
 </ul></li>
-<li>Creates rule-based cleaning flags for transparency</li>
+<li>Creates <strong>rule-based cleaning flags</strong> for
+transparency</li>
 <li>Removes listings with:
 <ul>
-<li>missing, zero, or negative prices</li>
+<li>missing or invalid prices</li>
 <li>missing key predictors</li>
-<li>logical inconsistencies in capacity information</li>
+<li>logical inconsistencies (e.g., 0 bedrooms with positive
+capacity)</li>
 </ul></li>
-<li>Creates the transformed outcome:
+<li>Constructs:
 <ul>
 <li><code>log_price = log1p(price)</code></li>
 </ul></li>
 </ul>
+<blockquote>
+<p>This ensures valid, comparable observations and reduces the impact of
+extreme values.</p>
+</blockquote>
+<hr />
 </div>
-<div id="exploratory-data-analysis" class="section level3">
-<h3>3. Exploratory Data Analysis</h3>
+<div id="exploratory-data-analysis-eda" class="section level3">
+<h3>3. Exploratory Data Analysis (EDA)</h3>
 <ul>
-<li>Summarizes nightly price using:
+<li>Summary statistics: min, median, mean, max</li>
+<li>Distribution plots for:
 <ul>
-<li>minimum</li>
-<li>median</li>
-<li>mean</li>
-<li>maximum</li>
+<li>raw price</li>
+<li>log-transformed price</li>
 </ul></li>
-<li>Visualizes the distribution of raw price</li>
-<li>Compares raw price vs. log-transformed price to show why the log
-scale is more suitable</li>
+<li>Demonstrates strong right-skew in raw prices and motivates the use
+of <code>log(price)</code></li>
 </ul>
+<hr />
 </div>
 <div id="text-analysis-of-listing-descriptions" class="section level3">
 <h3>4. Text Analysis of Listing Descriptions</h3>
 <ul>
-<li>Splits listings into <strong>High price</strong> and <strong>Low
-price</strong> groups using the median price</li>
-<li>Tokenizes descriptions</li>
+<li>Splits listings into:
+<ul>
+<li><strong>High price</strong></li>
+<li><strong>Low price</strong> (median split)</li>
+</ul></li>
+<li>Tokenizes descriptions using <code>tidytext</code></li>
 <li>Removes standard stopwords</li>
-<li>Keeps sensible alphabetical tokens only</li>
+<li>Filters to meaningful tokens</li>
 <li>Produces wordclouds for:
 <ul>
 <li>high-price listings</li>
 <li>low-price listings</li>
-<li>all listings combined</li>
+<li>overall dataset</li>
 </ul></li>
 </ul>
+<hr />
 </div>
 <div id="airbnb-specific-stopword-construction" class="section level3">
 <h3>5. Airbnb-Specific Stopword Construction</h3>
 <ul>
-<li>Identifies words that are very common in both price groups</li>
-<li>Treats highly shared generic listing terms as
-<strong>Airbnb-specific stopwords</strong></li>
-<li>Removes these words to improve the usefulness of later text
-analysis</li>
+<li>Identifies words common across both price groups using within-group
+proportions</li>
+<li>Removes highly shared generic terms (e.g., “apartment”,
+“downtown”)</li>
+<li>Improves signal quality for downstream text analysis</li>
 </ul>
+<hr />
 </div>
-<div id="tf-idf-feature-construction" class="section level3">
-<h3>6. TF-IDF Feature Construction</h3>
+<div id="tfidf-feature-engineering" class="section level3">
+<h3>6. TF–IDF Feature Engineering</h3>
 <ul>
-<li>Builds TF-IDF features for each listing description</li>
-<li>Compares average TF-IDF values between high-price and low-price
-groups</li>
-<li>Identifies words that are more associated with one group than the
-other</li>
+<li>Computes TF–IDF for each listing description</li>
+<li>Compares average TF–IDF between price groups</li>
+<li>Identifies <strong>words most associated with high vs low price
+listings</strong></li>
+<li>Visualizes differences using wordclouds</li>
 </ul>
+<hr />
 </div>
-<div id="dimension-reduction-on-text-features" class="section level3">
-<h3>7. Dimension Reduction on Text Features</h3>
+<div id="dimension-reduction-pca-on-text-features" class="section level3">
+<h3>7. Dimension Reduction (PCA on Text Features)</h3>
 <ul>
-<li>Builds a TF-IDF document-term matrix</li>
-<li>Applies PCA using <code>irlba::prcomp_irlba</code> for efficient
-dimension reduction on sparse text data</li>
-<li>Examines explained variance and component structure</li>
-<li>Tests whether PCA scores differ across price groups</li>
+<li>Builds a TF–IDF document-term matrix</li>
+<li>Applies PCA using <code>irlba::prcomp_irlba</code></li>
+<li>Examines:
+<ul>
+<li>variance explained</li>
+<li>principal component structure</li>
+</ul></li>
+<li>Tests whether PC scores differ across price groups (t-tests)</li>
 </ul>
 <blockquote>
-<p><strong>Note:</strong> The PCA section is still being refined, so
-this part of the project is currently exploratory and in progress.</p>
+<p>Note: Individual components explain small variance, which is typical
+for sparse text data.</p>
 </blockquote>
+<hr />
 </div>
-<div id="statistical-modeling" class="section level3">
-<h3>8. Statistical Modeling</h3>
+<div id="statistical-modeling-pricing-drivers" class="section level3">
+<h3>8. Statistical Modeling (Pricing Drivers)</h3>
 <ul>
-<li>Fits multiple linear regression models using
-<code>log1p(price)</code> as the response</li>
-<li>Compares candidate models using <strong>AIC</strong></li>
-<li>Examines whether the effect of bedrooms depends on room type through
-an interaction term</li>
-<li>Uses model comparison to identify the strongest and most
-interpretable pricing model</li>
+<li>Fits regression models with response:
+<ul>
+<li><code>log1p(price)</code></li>
+</ul></li>
+<li>Uses <strong>forward selection + AIC</strong> for model
+comparison</li>
+<li>Evaluates:
+<ul>
+<li>baseline additive model</li>
+<li>interaction model (<code>bedrooms × room_type</code>)</li>
+</ul></li>
+<li>Resolves interaction redundancy via structured variable design</li>
 </ul>
 <hr />
 </div>
 </div>
 <div id="main-variables-used" class="section level2">
 <h2>Main Variables Used</h2>
-<p>The main structured predictors in the pricing models are:</p>
 <ul>
 <li><code>accommodates</code></li>
 <li><code>bedrooms</code></li>
@@ -500,105 +534,96 @@ interpretable pricing model</li>
 <li><code>room_type</code></li>
 <li><code>minimum_nights</code></li>
 </ul>
-<p>These were chosen because they are intuitively important for pricing
-and had relatively manageable missing-data issues.</p>
+<p>Selected based on: - domain relevance (pricing intuition) - data
+quality (low missingness)</p>
 <hr />
 </div>
-<div id="key-results-so-far" class="section level2">
-<h2>Key Results So Far</h2>
-<div id="structured-listing-features" class="section level3">
-<h3>Structured Listing Features</h3>
-<p>The regression results suggest that:</p>
+<div id="key-findings" class="section level2">
+<h2>Key Findings</h2>
+<div id="structured-features" class="section level3">
+<h3>📊 Structured Features</h3>
 <ul>
-<li><strong>Room type is one of the strongest drivers of price</strong>
+<li><strong>Room type is a dominant pricing factor</strong>
 <ul>
-<li>hotel rooms tend to be priced higher than the baseline category</li>
-<li>private rooms tend to be priced lower than entire home/apartment
-listings</li>
+<li>hotel rooms → higher prices</li>
+<li>private rooms → lower prices than entire homes</li>
 </ul></li>
-<li><strong>Accommodates has a positive effect</strong>
+<li><strong>Capacity matters</strong>
 <ul>
-<li>listings that host more guests tend to have higher nightly
-prices</li>
+<li>higher <code>accommodates</code> → higher price</li>
 </ul></li>
 <li><strong>Minimum nights has a negative effect</strong>
 <ul>
-<li>listings with longer minimum stay requirements tend to have lower
-nightly prices</li>
+<li>longer required stays → lower nightly price</li>
 </ul></li>
-<li><strong>Bedrooms matter, but the effect depends on room
-type</strong>
+<li><strong>Bedrooms effect depends on room type (interaction)</strong>
 <ul>
-<li>the bedroom premium is smaller for private rooms than for
-entire-home listings</li>
+<li>bedrooms increase price overall</li>
+<li>effect is <strong>smaller for private rooms</strong></li>
+<li>strongest for entire-home listings</li>
 </ul></li>
 </ul>
+<hr />
 </div>
 <div id="text-features" class="section level3">
-<h3>Text Features</h3>
-<p>The text analysis suggests that listing descriptions do contain
-differences between higher- and lower-priced listings. TF-IDF
-comparisons show that some words are more characteristic of one price
-group than the other.</p>
-<p>Since the PCA section is still being improved, the text-based
-findings should currently be interpreted as exploratory.</p>
+<h3>🧠 Text Features</h3>
+<ul>
+<li>Listing descriptions show <strong>systematic differences</strong>
+across price groups</li>
+<li>TF–IDF highlights words associated with higher vs lower priced
+listings</li>
+<li>PCA suggests <strong>latent language patterns</strong>, though each
+component explains a small portion of variance</li>
+</ul>
 <hr />
 </div>
 </div>
 <div id="why-use-log1pprice" class="section level2">
 <h2>Why Use <code>log1p(price)</code>?</h2>
-<p>Raw Airbnb prices are strongly right-skewed, with a small number of
-very high-priced listings. Modeling <code>log1p(price)</code> helps:</p>
+<p>Airbnb prices are heavily right-skewed. Using
+<code>log1p(price)</code>:</p>
 <ul>
-<li>reduce skewness</li>
-<li>reduce the influence of extreme values</li>
-<li>make regression assumptions more reasonable</li>
-<li>improve interpretability of proportional price effects</li>
+<li>stabilizes variance</li>
+<li>reduces influence of extreme outliers</li>
+<li>improves regression assumptions</li>
+<li>allows interpretation in <strong>percentage terms</strong></li>
 </ul>
 <hr />
 </div>
 <div id="repository-structure" class="section level2">
 <h2>Repository Structure</h2>
 <ul>
-<li><code>Factors on Airbnb Pricing.Rmd</code> — full analysis with code
-and explanation</li>
-<li><code>Factors on Airbnb Pricing.md</code> — rendered GitHub-friendly
+<li><code>Factors on Airbnb Pricing.Rmd</code> — full analysis (code +
+narrative)</li>
+<li><code>Factors on Airbnb Pricing.md</code> — rendered GitHub
 report</li>
-<li><code>Factors on Airbnb Pricing_files/</code> — figures generated
-during knitting</li>
-<li><code>listings.csv</code> — input dataset (if included in the
-repository)</li>
+<li><code>Factors on Airbnb Pricing_files/</code> — generated
+figures</li>
+<li><code>listings.csv</code> — dataset (if included)</li>
 </ul>
 <hr />
 </div>
-<div id="tools-and-packages" class="section level2">
-<h2>Tools and Packages</h2>
+<div id="tools-and-methods" class="section level2">
+<h2>Tools and Methods</h2>
 <div id="r-packages" class="section level3">
 <h3>R Packages</h3>
 <ul>
-<li><code>tidyverse</code></li>
-<li><code>dplyr</code></li>
-<li><code>readr</code></li>
-<li><code>stringr</code></li>
-<li><code>tidyr</code></li>
-<li><code>ggplot2</code></li>
-<li><code>scales</code></li>
-<li><code>tidytext</code></li>
-<li><code>wordcloud</code></li>
-<li><code>RColorBrewer</code></li>
-<li><code>irlba</code></li>
-<li><code>broom</code></li>
+<li>tidyverse, dplyr, readr, stringr, tidyr</li>
+<li>ggplot2, scales</li>
+<li>tidytext, wordcloud, RColorBrewer</li>
+<li>irlba (fast PCA)</li>
+<li>broom</li>
 </ul>
 </div>
 <div id="methods" class="section level3">
 <h3>Methods</h3>
 <ul>
-<li>rule-based data cleaning with removal flags</li>
-<li>log transformation of price</li>
-<li>TF-IDF feature engineering</li>
-<li>PCA on text features</li>
-<li>multiple linear regression</li>
-<li>AIC-based model comparison</li>
+<li>rule-based data cleaning with transparency flags</li>
+<li>log transformation</li>
+<li>TF–IDF feature engineering</li>
+<li>PCA on high-dimensional text data</li>
+<li>linear regression</li>
+<li>AIC-based model selection</li>
 <li>interaction modeling</li>
 </ul>
 <hr />
@@ -607,25 +632,21 @@ repository)</li>
 <div id="how-to-run" class="section level2">
 <h2>How to Run</h2>
 <ol style="list-style-type: decimal">
-<li>Open the <code>.Rmd</code> file in <strong>RStudio</strong></li>
-<li>Install any required packages</li>
-<li>Knit the document using:
-<ul>
-<li><strong>Knit to GitHub Document</strong> for GitHub display</li>
-<li>or <strong>Knit to HTML</strong> for local viewing</li>
-</ul></li>
+<li>Open <code>.Rmd</code> in RStudio<br />
+</li>
+<li>Install required packages<br />
+</li>
+<li>Click <strong>Knit → GitHub Document</strong></li>
 </ol>
 <hr />
 </div>
 <div id="notes" class="section level2">
 <h2>Notes</h2>
 <ul>
-<li>The cleaning process is designed to be transparent by using separate
-removal flags before filtering.</li>
-<li>The text analysis depends on tokenization choices and the
-Airbnb-specific stopword list.</li>
-<li>The PCA section is still under development and may change as
-interpretation improves.</li>
+<li>Cleaning decisions are fully transparent via removal flags</li>
+<li>Text results depend on tokenization and custom stopword
+filtering</li>
+<li>PCA results are exploratory due to high-dimensional sparsity</li>
 </ul>
 <hr />
 </div>
@@ -636,11 +657,11 @@ interpretation improves.</li>
 </li>
 <li>✅ EDA completed<br />
 </li>
-<li>✅ TF-IDF and word frequency comparison completed<br />
+<li>✅ TF–IDF analysis completed<br />
 </li>
 <li>✅ Regression modeling completed<br />
 </li>
-<li>🚧 PCA interpretation still in progress</li>
+<li>🚧 PCA interpretation ongoing</li>
 </ul>
 <hr />
 </div>
