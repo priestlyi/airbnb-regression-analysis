@@ -5,8 +5,8 @@ Priestly
 ### RESEARCH QUESTION:
 
 How do listing characteristics such as capacity, room type, and minimum
-night requirements influence Airbnb pricing, and does the effect of
-bedrooms vary across different room types?
+night requirements influence Airbnb pricing in Montreal, and does the
+effect of bedrooms vary across different room types?
 
 ``` r
 library(readr)
@@ -14,7 +14,7 @@ library(tidyverse)
 library(dplyr)
 
 
-Listings <- read_csv("C:/Users/pries/OneDrive/Documents/listings.csv",
+Listings <- read_csv("listings.csv",
                  show_col_types = FALSE)
 
 glimpse(Listings)
